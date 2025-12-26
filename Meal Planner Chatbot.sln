@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35208.52
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Meal Planner Chatbot", "Meal Planner Chatbot\Meal Planner Chatbot.pyproj", "{B8AC3203-39F7-4F98-AF61-8FF1F806B83A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8AC3203-39F7-4F98-AF61-8FF1F806B83A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8AC3203-39F7-4F98-AF61-8FF1F806B83A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {172A08EE-56C2-4898-9867-8053141CC484}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,26 @@
+# Core Flask dependencies
+Flask==3.0.3
+Flask-Compress==1.17
+Flask-CORS==4.0.0
+gunicorn==23.0.0
+
+# OpenAI for chat functionality
+openai==1.53.0
+
+# PDF generation
+reportlab==4.2.5
+Pillow==11.0.0
+
+# Web scraping
+beautifulsoup4==4.12.3
+requests==2.32.3
+
+# Utilities
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.0
+
+# Optional: If using PostgreSQL for storing PDFs/data
+psycopg2-binary==2.9.9
+
+# Optional: If using AWS S3 instead of local storage
+boto3==1.35.0

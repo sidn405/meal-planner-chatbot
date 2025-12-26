@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthy Eating Guru - Meal Planner Widget</title>
+    <style>
+        /* ========================================
+           MEAL PLANNER CHAT WIDGET
+           Healthy Eating Guru
+           ======================================== */
+        
+        /* Chat Button - Floating meal planner icon */
+        #meal-chat-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fe980a 0%, #27a130 100%);
+            border: 3px solid #ff6f00;
+            box-shadow: 0 4px 20px rgba(45,80,22,0.4);
+            cursor: pointer;
+            z-index: 9998;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        #meal-chat-button:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 30px rgba(45,80,22,0.6);
+            animation: none;
+        }
+        
+        #meal-chat-button.open {
+            background: #ff6f00;
+            border-color: #fe980a;
+        }
+        
+        #meal-chat-button.open:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Notification Badge */
+        .meal-notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Widget Container */
+        #meal-chat-container {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 420px;
+            height: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.4);
+            z-index: 9999;
+            display: none;
+            overflow: hidden;
+            background: white;
+            border: 3px solid #fe980a;
+        }
+        
+        #meal-chat-container.open {
+            display: block;
+            animation: slideUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Widget Header */
+        #meal-chat-header {
+            background: linear-gradient(135deg, #fe980a 0%, #27a130 100%);
+            color: white;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ff6f00;
+        }
+        
+        #meal-chat-header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        #meal-chat-header-icon {
+            font-size: 28px;
+        }
+        
+        #meal-chat-header-text h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        #meal-chat-header-text p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        
+        #meal-chat-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #meal-chat-close:hover {
+            background: #ff6f00;
+            color: white;
+            transform: rotate(90deg);
+        }
+        
+        /* iFrame */
+        #meal-chat-iframe {
+            width: 100%;
+            height: calc(100% - 75px);
+            border: none;
+            background: #f5f9f5;
+        }
+        
+        /* Loading State */
+        .meal-chat-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fe980a;
+        }
+        
+        .meal-chat-loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e0e0e0;
+            border-top: 5px solid #fe980a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            #meal-chat-container {
+                width: 100%;
+                height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+                border: none;
+            }
+            
+            #meal-chat-button {
+                bottom: 15px;
+                right: 15px;
+                width: 60px;
+                height: 60px;
+            }
+            
+            #meal-chat-header {
+                padding: 15px;
+            }
+            
+            #meal-chat-header-text h3 {
+                font-size: 15px;
+            }
+        }
+        
+        /* Accessibility */
+        #meal-chat-button:focus,
+        #meal-chat-close:focus {
+            outline: 3px solid #ff6f00;
+            outline-offset: 2px;
+        }
+        
+        /* Print - Hide widget when printing */
+        @media print {
+            #meal-chat-button,
+            #meal-chat-container {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Chat Widget Button -->
+    <button 
+        id="meal-chat-button" 
+        onclick="mealToggleChat()"
+        aria-label="Open meal planner chat"
+        title="Chat with Dave - AI Meal Planner"
+    >
+        🥗
+        <span class="meal-notification-badge" id="meal-notification">!</span>
+    </button>
+    
+    <!-- Chat Widget Container -->
+    <div id="meal-chat-container" role="dialog" aria-label="Meal planning chatbot">
+        <div id="meal-chat-header">
+            <div id="meal-chat-header-content">
+                <span id="meal-chat-header-icon">🥗</span>
+                <div id="meal-chat-header-text">
+                    <h3>Healthy Eating Guru</h3>
+                    <p>AI-Powered Meal Planning</p>
+                </div>
+            </div>
+            <button 
+                id="meal-chat-close" 
+                onclick="mealToggleChat()"
+                aria-label="Close chat"
+                title="Close chat"
+            >
+                ×
+            </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div class="meal-chat-loading" id="meal-chat-loading">
+            <div class="meal-chat-loading-spinner"></div>
+            <p>Loading meal planner...</p>
+        </div>
+        
+        <!-- Chat iFrame -->
+        <iframe 
+            id="meal-chat-iframe"
+            src=""
+            allow="microphone; camera"
+            loading="lazy"
+            title="Healthy Eating Guru Chat Interface"
+        ></iframe>
+    </div>
+    
+    <script>
+        // ========================================
+        // CONFIGURATION
+        // ========================================
+        
+        const MEAL_CHAT_CONFIG = {
+            // IMPORTANT: Replace with your Railway URL
+            botUrl: 'https://your-railway-app.railway.app',
+            
+            // Optional: Auto-open after X seconds
+            autoOpenDelay: 0,  // 0 = disabled, 5000 = 5 seconds
+            
+            // Optional: Show notification badge
+            showNotification: true,
+            notificationDelay: 5000,  // Show after 5 seconds
+            
+            // Optional: Remember open/closed state
+            rememberState: true,
+            
+            // Optional: Analytics tracking
+            trackEvents: true,
+        };
+        
+        // ========================================
+        // MAIN FUNCTIONS
+        // ========================================
+        
+        let mealIframeLoaded = false;
+        
+        function mealToggleChat() {
+            const container = document.getElementById('meal-chat-container');
+            const button = document.getElementById('meal-chat-button');
+            const badge = document.getElementById('meal-notification');
+            const iframe = document.getElementById('meal-chat-iframe');
+            const loading = document.getElementById('meal-chat-loading');
+            
+            const isOpen = container.classList.contains('open');
+            
+            if (isOpen) {
+                // Close chat
+                container.classList.remove('open');
+                button.classList.remove('open');
+                
+                if (MEAL_CHAT_CONFIG.rememberState) {
+                    localStorage.setItem('meal-chat-state', 'closed');
+                }
+                
+                // Track close event
+                mealTrackEvent('chat_closed');
+            } else {
+                // Open chat
+                container.classList.add('open');
+                button.classList.add('open');
+                badge.style.display = 'none';
+                
+                // Load iframe on first open
+                if (!mealIframeLoaded) {
+                    iframe.src = MEAL_CHAT_CONFIG.botUrl;
+                    mealIframeLoaded = true;
+                    
+                    // Hide loading when iframe loads
+                    iframe.onload = function() {
+                        loading.style.display = 'none';
+                    };
+                }
+                
+                if (MEAL_CHAT_CONFIG.rememberState) {
+                    localStorage.setItem('meal-chat-state', 'open');
+                }
+                
+                // Track open event
+                mealTrackEvent('chat_opened');
+            }
+        }
+        
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        
+        function mealInitChat() {
+            // Check if URL is configured
+            if (!MEAL_CHAT_CONFIG.botUrl || MEAL_CHAT_CONFIG.botUrl.includes('your-railway-app')) {
+                console.error('Meal Chat Widget: Please configure botUrl in MEAL_CHAT_CONFIG');
+                return;
+            }
+            
+            // Auto-open if configured
+            if (MEAL_CHAT_CONFIG.autoOpenDelay > 0) {
+                setTimeout(() => {
+                    mealToggleChat();
+                }, MEAL_CHAT_CONFIG.autoOpenDelay);
+            }
+            
+            // Show notification badge
+            if (MEAL_CHAT_CONFIG.showNotification) {
+                setTimeout(() => {
+                    const badge = document.getElementById('meal-notification');
+                    badge.style.display = 'flex';
+                }, MEAL_CHAT_CONFIG.notificationDelay);
+            }
+            
+            // Restore previous state
+            if (MEAL_CHAT_CONFIG.rememberState) {
+                const savedState = localStorage.getItem('meal-chat-state');
+                if (savedState === 'open') {
+                    mealToggleChat();
+                }
+            }
+            
+            // Track widget loaded
+            mealTrackEvent('widget_loaded');
+        }
+        
+        // ========================================
+        // ANALYTICS
+        // ========================================
+        
+        function mealTrackEvent(eventName) {
+            if (!MEAL_CHAT_CONFIG.trackEvents) return;
+            
+            // Google Analytics 4
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, {
+                    'event_category': 'meal_chat_widget',
+                    'event_label': 'Meal Planner Bot',
+                    'value': 1
+                });
+            }
+            
+            // Google Analytics Universal
+            if (typeof ga !== 'undefined') {
+                ga('send', 'event', 'Meal Chat Widget', eventName, 'Meal Planner Bot');
+            }
+            
+            // Facebook Pixel
+            if (typeof fbq !== 'undefined') {
+                fbq('trackCustom', 'MealChatWidget', {
+                    action: eventName
+                });
+            }
+            
+            // Console log for debugging
+            console.log('Meal Chat Widget:', eventName);
+        }
+        
+        // ========================================
+        // KEYBOARD ACCESSIBILITY
+        // ========================================
+        
+        document.addEventListener('keydown', function(e) {
+            // ESC to close
+            if (e.key === 'Escape') {
+                const container = document.getElementById('meal-chat-container');
+                if (container.classList.contains('open')) {
+                    mealToggleChat();
+                }
+            }
+        });
+        
+        // ========================================
+        // START
+        // ========================================
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', mealInitChat);
+        } else {
+            mealInitChat();
+        }
+    </script>
+</body>
+</html>

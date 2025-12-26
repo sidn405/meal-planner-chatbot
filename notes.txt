@@ -1,0 +1,418 @@
+if intent == 'CreateMealPlan':
+            # Code for handling the CreateMealPlan intent
+            number_of_days = parameters.get('number_of_days')
+            if not number_of_days:
+                return jsonify({'error': 'number_of_days is missing'}), 400
+
+            try:
+                number_of_days = int(number_of_days)
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid number_of_days format. Must be a positive integer'}), 400
+
+            favorite_ingredients = parameters.get('favorite_ingredients')
+            allergies = parameters.get('allergies')
+            cuisine_preferences = parameters.get('cuisine_preferences')
+            dietary_preferences = parameters.get('dietary_preferences')
+            portion_size = parameters.get('portion_size')
+            meal_frequency = parameters.get('meal_frequency')
+            budget_considerations = parameters.get('budget_considerations')
+
+            # Create the prompt for OpenAI based on number of days and cuisine preferences
+            prompt = (f"Create a {number_of_days}-day meal plan for a person who prefers {cuisine_preferences} cuisine, "
+                      f"with favorite ingredients like {favorite_ingredients}, and avoiding {allergies}. "
+                      f"The person follows a {dietary_preferences} diet, prefers {portion_size} portions, "
+                      f"eats {meal_frequency} meals a day, and has a budget of {budget_considerations}.")
+            
+            # Call OpenAI to get the meal plan
+            response_text = call_openai(prompt)
+            print(f"OpenAI response: {response_text}")
+
+            # Generate a safe filename using the number of days and cuisine preferences
+            filename = sanitize_filename(number_of_days, cuisine_preference)
+
+            # Create the PDF with the meal plan content and save it with the generated filename
+            pdf_path = create_pdf_with_reportlab(response_text, filename)
+            print(f"PDF generated successfully and saved at: {pdf_path}")
+
+            if pdf_path:
+                # Upload to GCS and get the public URL
+                print(f"PDF successfully created at: {pdf_path}")
+                upload_response = upload_to_gcs_json_api("pdf-viewer-bucket", f"pdfs/{filename}", pdf_path)
+               
+                if upload_response:
+                    download_url = upload_response.get("public_url", f"https://storage.googleapis.com/{upload_response['bucket']}/{upload_response['name']}")
+                    print(f"Download URL: {download_url}")
+                    
+                    # Optionally make the object public
+                    download_url = make_gcs_object_public(upload_response['bucket'], upload_response['name'])
+
+                    return jsonify({
+                        "fulfillmentMessages": [
+                            {"text": {"text": ["Great, here is your meal plan"]}},
+                            {"payload": {"richContent": [{"title": "Your Meal Plan", "subtitle": "Click below to download.", "actionLink": download_url, "type": "info"}]}},
+                            {"text": {"text": ["Is there anything else I can help you with today?"]}}
+                        ],
+                        "sessionInfo": {"parameters": {"download_url": download_url}}
+                    })
+                else:
+                    print("Error uploading to GCS")
+                    return jsonify({'fulfillmentText': 'Error uploading the meal plan PDF.'}), 500
+            else:
+                print("Error creating the PDF")
+                return jsonify({'fulfillmentText': 'Error creating the meal plan PDF.'}), 500
+
+# Return a fallback response if the intent is not recognized
+     return jsonify({
+            "fulfillmentText": "I couldn't understand your request. Could you please clarify?"
+        })
+
+    except Exception as e:
+        print(f"Error during processing: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'fulfillmentText': 'An error occurred.'}), 500
+            
+
+        elif intent == 'GenerateGroceryList':
+            recipe_preference = parameters.get('recipe_preference')
+            dietary_restrictions = parameters.get('dietary_restrictions')
+            portion_sizes = parameters.get('portion_sizes')
+
+            if recipe_preference:
+                prompt = (f"Generate a grocery list for the following recipes: {recipe_preference}. "
+                          f"Make sure the list fits a {dietary_restrictions} diet, serves {portion_sizes}.")
+                response_text = call_openai(prompt)
+            else:
+                response_text = "Please provide recipes or create a meal plan first to generate your grocery list."
+            
+            filename = "grocery_list.pdf"
+            pdf_path = create_pdf_with_reportlab(response_text, filename)
+            
+
+            if pdf_path:
+                # Upload to GCS and get the public URL
+                upload_response = upload_to_gcs_json_api("pdf-viewer-bucket", f"pdfs/{filename}", pdf_path)
+
+                if upload_response:
+                    download_url = upload_response.get("public_url", f"https://storage.googleapis.com/{upload_response['bucket']}/{upload_response['name']}")
+                    return jsonify({
+                        "fulfillmentText": "Here is your grocery list. Click the link below to download it.",
+                        "sessionInfo": {"parameters": {"download_url": download_url}}
+                    })
+                else:
+                    return jsonify({'fulfillmentText': 'Error uploading the grocery list PDF.'}), 500
+            else:
+                return jsonify({'fulfillmentText': 'Error creating the grocery list PDF.'}), 500
+
+
+    except KeyError as e:
+        return jsonify({'error': f'Bad Request: Missing key {e}'}), 400
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({'error': 'Internal Server Error'}), 500
+
+faq.healthy.eating Route Group
+
+Eating healthy on a budget is possible with proper planning. Incorporating more vegetables into your diet, balancing your meals, and choosing healthy snacks are all beneficial. Drinking enough water, meal prepping for busy schedules, and reducing sugar intake are other key aspects of a healthy diet. For plant-based diets, I can suggest protein-rich foods, and offer tips on what to eat before and after a workout.
+
+Here are 25 FAQs a user might ask on a healthy eating website, along with answers:
+1. How much water should I drink daily?
+
+    It’s recommended to drink at least 8 glasses (64 ounces) of water a day. However, individual needs may vary based on activity level, climate, and health conditions.
+
+2. What are some healthy snacks?
+
+    Healthy snacks include nuts, fresh fruits, yogurt, vegetable sticks with hummus, whole-grain crackers, and air-popped popcorn.
+
+3. How can I eat healthy on a budget?
+
+    Plan meals ahead, buy seasonal produce, purchase in bulk, and choose frozen or canned vegetables. Cooking at home and reducing processed foods can also save money.
+
+4. What should I eat before and after a workout?
+
+    Before a workout: Focus on carbs for energy, like bananas, oatmeal, or a piece of whole-grain toast.
+    After a workout: Include a mix of protein and carbs, like a smoothie with protein powder and fruit or grilled chicken with sweet potatoes.
+
+5. What are good sources of plant-based protein?
+
+    Lentils, chickpeas, quinoa, tofu, tempeh, nuts, seeds, and edamame are great sources of plant-based protein.
+
+6. How do I reduce sugar in my diet?
+
+    Cut back on sugary drinks, choose unsweetened foods, use natural sweeteners like honey or dates, and check labels for hidden sugars.
+
+7. Is it healthier to eat organic foods?
+
+    Organic foods are grown without synthetic pesticides and fertilizers. They may have higher nutrient levels and fewer pesticide residues, but eating more fruits and vegetables, organic or not, is more important for overall health.
+
+8. What are some healthy meal prep ideas?
+
+    Prepare meals like overnight oats, roasted vegetables, grilled chicken, quinoa bowls, and salads in jars for easy grab-and-go options.
+
+9. How can I control portion sizes?
+
+    Use smaller plates, serve food directly from the kitchen (not at the table), eat slowly, and listen to hunger cues to avoid overeating.
+
+10. What are whole foods?
+
+    Whole foods are minimally processed or unprocessed foods like fresh fruits, vegetables, whole grains, nuts, seeds, and lean proteins.
+
+11. How do I get more fiber in my diet?
+
+    Eat more whole grains, fruits, vegetables, beans, lentils, and seeds. Aim for 25-30 grams of fiber per day.
+
+12. What are healthy fats?
+
+    Healthy fats include avocados, nuts, seeds, olive oil, fatty fish (like salmon), and chia seeds. These fats support heart health and provide essential nutrients.
+
+13. How can I reduce cravings for junk food?
+
+    Eat balanced meals, stay hydrated, get enough sleep, and find healthier alternatives like fruit for sweets or nuts for salty snacks.
+
+14. Are dairy products healthy?
+
+    Dairy can be a good source of calcium and protein. Choose low-fat or fat-free options and consider alternatives like almond or oat milk if you’re lactose intolerant.
+
+15. What is intermittent fasting, and is it healthy?
+
+    Intermittent fasting involves cycling between periods of eating and fasting. It may aid weight loss and improve metabolic health, but it’s not suitable for everyone. Consult a healthcare professional first.
+
+16. How do I read food labels?
+
+    Look for serving size, calories, fats, sugars, sodium, and ingredient list. Avoid foods high in added sugars, trans fats, and sodium.
+
+17. What are antioxidants, and why are they important?
+
+    Antioxidants are compounds that protect cells from damage caused by free radicals. Foods high in antioxidants include berries, nuts, spinach, and dark chocolate.
+
+18. How much protein do I need per day?
+
+    The average adult needs about 0.8 grams of protein per kilogram of body weight, but active individuals or those building muscle may need more.
+
+19. Can I eat carbohydrates and still lose weight?
+
+    Yes, choose complex carbs like whole grains, sweet potatoes, and legumes over refined carbs. Portion control and balance are key.
+
+20. What foods should I avoid for better digestion?
+
+    Limit processed foods, fried foods, caffeine, alcohol, and dairy (if you’re lactose intolerant) to improve digestion.
+
+21. What are some good breakfast options for weight loss?
+
+    Opt for high-protein, high-fiber breakfasts like Greek yogurt with berries, avocado toast with a poached egg, or oatmeal with nuts and fruit.
+
+22. How do I maintain energy throughout the day?
+
+    Eat balanced meals with lean protein, complex carbs, and healthy fats. Avoid sugar spikes by choosing low-glycemic foods like whole grains and vegetables.
+
+23. What are superfoods?
+
+    Superfoods are nutrient-rich foods like blueberries, salmon, kale, quinoa, and turmeric. They are high in vitamins, minerals, and antioxidants.
+
+24. How can I add more vegetables to my diet?
+
+    Add veggies to smoothies, soups, and stews, use them as snacks, and include a variety of colors in salads.
+
+25. Is it okay to eat late at night?
+
+   Eating late occasionally isn’t harmful, but regular late-night eating may affect digestion and sleep. Choose light, healthy snacks like a small handful of nuts or a piece of fruit if you need to eat late.
+
+1. gen.faq.1: How much water should I drink daily?
+
+    How much water should I drink every day?
+    What's the recommended daily water intake?
+    How many glasses of water do I need each day?
+    How much water is enough for proper hydration?
+    What’s a healthy daily water amount?
+
+2. gen.faq.2: What are some healthy snacks?
+
+    What are some good healthy snack ideas?
+    Can you suggest healthy snacks?
+    What snacks are best for weight loss?
+    What are some quick healthy snacks?
+    What are the healthiest snacks to eat?
+
+3. gen.faq.3: How can I eat healthy on a budget?
+
+    How do I eat healthy without spending too much?
+    What are budget-friendly healthy meals?
+    How can I save money while eating healthy?
+    Tips for eating healthy on a budget?
+    What are some cheap healthy foods?
+
+4. gen.faq.4: What should I eat before and after a workout?
+
+    What should I eat before I work out?
+    What’s the best post-workout meal?
+    What foods give energy before exercising?
+    What’s a good snack after a workout?
+    What should I eat for recovery after exercising?
+
+5. gen.faq.5: What are good sources of plant-based protein?
+
+    What are the best plant-based proteins?
+    What vegetarian foods are high in protein?
+    What are some vegan protein sources?
+    How can I get protein without meat?
+    What are high-protein foods for a plant-based diet?
+
+6. gen.faq.6: How do I reduce sugar in my diet?
+
+    How can I cut down on sugar?
+    What’s the best way to lower sugar intake?
+    How do I avoid eating too much sugar?
+    What are alternatives to sugary foods?
+    Tips for reducing sugar consumption?
+
+7. gen.faq.7: Is it healthier to eat organic foods?
+
+    Are organic foods better for health?
+    Should I buy organic vegetables and fruits?
+    What’s the benefit of eating organic foods?
+    Are organic products healthier?
+    Is it worth buying organic food?
+
+8. gen.faq.8: What are some healthy meal prep ideas?
+
+    What are some easy meal prep ideas?
+    How do I prepare healthy meals ahead?
+    What are good foods to meal prep?
+    How can I meal prep for the week?
+    What’s a simple way to start meal prepping?
+
+9. gen.faq.9: How can I control portion sizes?
+
+    How do I manage my portion sizes?
+    What’s a healthy portion size?
+    How can I avoid overeating?
+    Tips for controlling how much I eat?
+    How to know if my portions are too big?
+
+10. gen.faq.10: What are whole foods?
+
+    What does it mean to eat whole foods?
+    What are examples of whole foods?
+    Why are whole foods good for health?
+    What’s the definition of whole foods?
+    How do I include more whole foods in my diet?
+
+11. gen.faq.11: How do I get more fiber in my diet?
+
+    What foods are high in fiber?
+    How can I eat more fiber-rich foods?
+    Tips for increasing fiber intake?
+    What are good sources of dietary fiber?
+    How do I boost fiber in my meals?
+
+12. gen.faq.12: What are healthy fats?
+
+    What are some examples of healthy fats?
+    How do I add healthy fats to my diet?
+    What’s the difference between good and bad fats?
+    What fats should I eat for better health?
+    What are some nutritious fat sources?
+
+13. gen.faq.13: How can I reduce cravings for junk food?
+
+    How do I stop craving unhealthy snacks?
+    What’s the best way to beat junk food cravings?
+    Tips for avoiding junk food?
+    How can I control my desire for sugary snacks?
+    What can I eat instead of junk food?
+
+14. gen.faq.14: Are dairy products healthy?
+
+    Is milk good for health?
+    Should I eat dairy products?
+    Are low-fat dairy options healthier?
+    What are the benefits of eating dairy?
+    What’s the best way to consume dairy?
+
+15. gen.faq.15: What is intermittent fasting, and is it healthy?
+
+    What is intermittent fasting?
+    Is intermittent fasting good for weight loss?
+    What are the health benefits of fasting?
+    How does intermittent fasting work?
+    Should I try intermittent fasting?
+
+16. gen.faq.16: How do I read food labels?
+
+    What should I look for on food labels?
+    How do I understand nutrition labels?
+    What does “serving size” mean on a label?
+    How can food labels help me eat healthier?
+    What do all the numbers on a food label mean?
+
+17. gen.faq.17: What are antioxidants, and why are they important?
+
+    What foods are high in antioxidants?
+    What’s the role of antioxidants in my diet?
+    Why are antioxidants good for health?
+    How do antioxidants benefit the body?
+    What are natural sources of antioxidants?
+
+18. gen.faq.18: How much protein do I need per day?
+
+    How much protein should I eat daily?
+    What’s the recommended protein intake?
+    How do I calculate my protein needs?
+    How much protein is good for muscle building?
+    What’s a healthy daily protein goal?
+
+19. gen.faq.19: Can I eat carbohydrates and still lose weight?
+
+    Can carbs fit into a weight loss plan?
+    What are the best carbs for weight loss?
+    Should I avoid carbs to lose weight?
+    How do I choose healthy carbs?
+    Are all carbohydrates bad for weight loss?
+
+20. gen.faq.20: What foods should I avoid for better digestion?
+
+    What foods can cause digestive issues?
+    How do I improve my digestion?
+    What foods should I eat for a healthy gut?
+    Which foods should I avoid for better digestion?
+    What are some digestion-friendly foods?
+
+21. gen.faq.21: What are some good breakfast options for weight loss?
+
+    What’s a healthy breakfast for losing weight?
+    What should I eat for breakfast to stay full?
+    What are the best breakfast foods for weight loss?
+    How do I make a low-calorie breakfast?
+    What are healthy breakfast ideas?
+
+22. gen.faq.22: How do I maintain energy throughout the day?
+
+    How can I keep my energy up all day?
+    What foods boost energy levels?
+    How do I stay energized without caffeine?
+    What’s a good way to stay active and alert?
+    How can my diet improve my energy?
+
+23. gen.faq.23: What are superfoods?
+
+    What are the top superfoods?
+    What makes a food a superfood?
+    Are superfoods really better for health?
+    How do I add superfoods to my diet?
+    Why are superfoods beneficial?
+
+24. gen.faq.24: How can I add more vegetables to my diet?
+
+    What’s the easiest way to eat more veggies?
+    How can I make vegetables taste better?
+    What are some creative ways to eat vegetables?
+    How do I get more greens in my diet?
+    What are the best vegetables for health?
+
+25. gen.faq.25: Is it okay to eat late at night?
+
+    Should I avoid eating before bed?
+    Is it bad to eat late at night?
+    What’s a healthy late-night snack?
+    How does eating late affect my weight?
+    What are the consequences of late-night eating?
+
