@@ -358,20 +358,33 @@ def index():
 def chat():
     """Handle chat messages."""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         message = data.get('message', '')
-        
-        logger.info(f"Chat: {message}")
-        
+
+        channel = (data.get('channel') or '').lower()     # e.g. "alexa"
+        want_pdf = data.get('want_pdf', True)             # default True for web
+        fast = data.get('fast', False)
+        is_alexa = (channel == 'alexa')
+
+        if is_alexa:
+            want_pdf = False
+            fast = True
+
+        def clip(text, n):
+            if not text:
+                return ""
+            return text[:n] + "..." if len(text) > n else text
+
+        logger.info(f"Chat: {message} (channel={channel}, want_pdf={want_pdf}, fast={fast})")
+
         # Extract parameters
         params = extract_parameters(message)
         logger.info(f"Parameters: {params}")
-        
+
         # Determine what to generate
         if params['type'] == 'recipe':
-            # Generate recipe - just use the user's original message
             prompt = f"Create a detailed, professional recipe based on this request: '{message}'\n\n"
-            
+
             if params['cuisine']:
                 prompt += f"Cuisine style: {params['cuisine']}\n"
             if params['dietary']:
@@ -391,24 +404,25 @@ def chat():
 
 **Chef's Tips:**
 (Pro tips)"""
-            
+
             content = call_openai(prompt)
-            
-            # Create PDF
-            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename = f"recipe-{timestamp}.pdf"
-            pdf_path = create_branded_pdf(content, filename, doc_type="recipe")
-            
+
+            pdf_url = None
+            if want_pdf:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                filename = f"recipe-{timestamp}.pdf"
+                pdf_path = create_branded_pdf(content, filename, doc_type="recipe")
+                pdf_url = f'/download/{filename}' if pdf_path else None
+
             response = {
                 'response': "Here's your recipe! 🍳",
-                'content': content[:500] + "..." if len(content) > 500 else content,
-                'pdf_url': f'/download/{filename}' if pdf_path else None
+                'content': clip(content, 300 if is_alexa else 500),
+                'pdf_url': pdf_url
             }
-            
+
         elif params['type'] == 'meal_plan':
-            # Generate meal plan
             days = params['days'] or 7
-            
+
             prompt = f"Create a detailed {days}-day meal plan.\n\n"
             if params['cuisine']:
                 prompt += f"Cuisine preference: {params['cuisine']}\n"
@@ -423,22 +437,23 @@ def chat():
 **Dinner:**
 
 Include nutritional highlights and prep tips."""
-            
+
             content = call_openai(prompt)
-            
-            # Create PDF
-            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename = f"meal-plan-{days}days-{timestamp}.pdf"
-            pdf_path = create_branded_pdf(content, filename, doc_type="meal_plan")
-            
+
+            pdf_url = None
+            if want_pdf:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                filename = f"meal-plan-{days}days-{timestamp}.pdf"
+                pdf_path = create_branded_pdf(content, filename, doc_type="meal_plan")
+                pdf_url = f'/download/{filename}' if pdf_path else None
+
             response = {
                 'response': f"Here's your {days}-day meal plan! 📅",
-                'content': content[:500] + "..." if len(content) > 500 else content,
-                'pdf_url': f'/download/{filename}' if pdf_path else None
+                'content': clip(content, 300 if is_alexa else 500),
+                'pdf_url': pdf_url
             }
-            
+
         elif params['type'] == 'grocery_list':
-            # Generate grocery list
             prompt = f"Generate a complete grocery shopping list.\n\n"
             if params['dietary']:
                 prompt += f"Dietary preference: {params['dietary']}\n"
@@ -453,22 +468,23 @@ Include nutritional highlights and prep tips."""
 **Spices & Seasonings:**
 
 Include quantities and budget tips."""
-            
+
             content = call_openai(prompt)
-            
-            # Create PDF
-            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename = f"grocery-list-{timestamp}.pdf"
-            pdf_path = create_branded_pdf(content, filename, doc_type="grocery_list")
-            
+
+            pdf_url = None
+            if want_pdf:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                filename = f"grocery-list-{timestamp}.pdf"
+                pdf_path = create_branded_pdf(content, filename, doc_type="grocery_list")
+                pdf_url = f'/download/{filename}' if pdf_path else None
+
             response = {
                 'response': "Here's your grocery list! 🛒",
-                'content': content[:500] + "..." if len(content) > 500 else content,
-                'pdf_url': f'/download/{filename}' if pdf_path else None
+                'content': clip(content, 300 if is_alexa else 500),
+                'pdf_url': pdf_url
             }
-            
+
         else:
-            # General response
             response = {
                 'response': """Welcome to Healthy Eating Guru! 🥗
 
@@ -479,14 +495,13 @@ I can help you with:
 
 What would you like today?"""
             }
-        
+
         return jsonify(response)
-        
+
     except Exception as e:
         logger.error(f"Chat error: {e}")
         logger.exception(e)
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/download/<filename>')
 def download_pdf(filename):

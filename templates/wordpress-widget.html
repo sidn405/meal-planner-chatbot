@@ -1,0 +1,294 @@
+<!-- Healthy Eating Guru - Meal Planner Chatbot Widget -->
+<!-- Paste this code in: Appearance > Customize > Additional CSS (for styles) -->
+<!-- And Appearance > Widgets or Footer (for the HTML) -->
+
+<!-- STEP 1: Add this to Additional CSS or in a Custom HTML widget -->
+<style>
+/* Meal Planner Chatbot - Floating Widget */
+#mealBotButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #27a130 0%, #fe980a 100%);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    transition: all 0.3s ease;
+    border: 3px solid #fff;
+}
+
+#mealBotButton:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(39, 161, 48, 0.5);
+}
+
+#mealChatWidget {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 380px;
+    height: 600px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    border: 2px solid #27a130;
+}
+
+#mealChatWidget.active {
+    display: flex;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#mealChatHeader {
+    background: linear-gradient(135deg, #27a130 0%, #fe980a 100%);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Arial, sans-serif;
+}
+
+#mealChatHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+#mealCloseBtn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+#mealCloseBtn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+#mealChatFrame {
+    flex: 1;
+    border: none;
+    width: 100%;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    #mealChatWidget {
+        width: calc(100% - 20px);
+        height: calc(100% - 100px);
+        right: 10px;
+        bottom: 80px;
+    }
+    
+    #mealBotButton {
+        width: 55px;
+        height: 55px;
+        font-size: 26px;
+        right: 15px;
+        bottom: 15px;
+    }
+}
+
+/* Notification badge (optional - for future use) */
+#mealBotBadge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #fe980a;
+    color: white;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    border: 2px solid white;
+}
+</style>
+
+<!-- STEP 2: Add this HTML code -->
+<!-- Floating Button -->
+<div id="mealBotButton" onclick="toggleMealChat()" title="Get Meal Planning Help">
+    🥗
+    <span id="mealBotBadge">!</span>
+</div>
+
+<!-- Chat Widget -->
+<div id="mealChatWidget">
+    <div id="mealChatHeader">
+        <h3>🥗 Healthy Eating Guru</h3>
+        <button id="mealCloseBtn" onclick="toggleMealChat()">×</button>
+    </div>
+    <iframe 
+        id="mealChatFrame"
+        src="https://meal-planner-chatbot-production.up.railway.app"
+        allow="clipboard-write"
+        loading="lazy">
+    </iframe>
+</div>
+
+<!-- STEP 3: Add this JavaScript -->
+<script>
+function toggleMealChat() {
+    const widget = document.getElementById('mealChatWidget');
+    const badge = document.getElementById('mealBotBadge');
+    
+    if (widget.classList.contains('active')) {
+        widget.classList.remove('active');
+    } else {
+        widget.classList.add('active');
+        // Hide notification badge when opened
+        badge.style.display = 'none';
+    }
+}
+
+// Optional: Show badge on first visit
+window.addEventListener('load', function() {
+    // Check if user has visited before
+    if (!localStorage.getItem('mealBotVisited')) {
+        setTimeout(function() {
+            document.getElementById('mealBotBadge').style.display = 'flex';
+        }, 3000); // Show after 3 seconds
+        
+        localStorage.setItem('mealBotVisited', 'true');
+    }
+});
+
+// Optional: Close widget when clicking outside (advanced)
+document.addEventListener('click', function(event) {
+    const widget = document.getElementById('mealChatWidget');
+    const button = document.getElementById('mealBotButton');
+    
+    if (widget.classList.contains('active')) {
+        if (!widget.contains(event.target) && !button.contains(event.target)) {
+            widget.classList.remove('active');
+        }
+    }
+});
+</script>
+
+<!-- 
+===========================================
+INSTALLATION INSTRUCTIONS
+===========================================
+
+METHOD 1: Custom HTML Widget (Easiest)
+---------------------------------------
+1. Go to: Appearance > Widgets
+2. Find your Footer or Sidebar area
+3. Add a "Custom HTML" widget
+4. Paste ALL the code above
+5. Save
+
+METHOD 2: Theme Footer (Recommended)
+------------------------------------
+1. Go to: Appearance > Theme File Editor
+2. Find: footer.php (or theme footer template)
+3. Paste code just before </body> tag
+4. Update File
+
+METHOD 3: Additional CSS + Custom HTML
+---------------------------------------
+Part A - CSS:
+1. Go to: Appearance > Customize > Additional CSS
+2. Copy just the <style> section (without <style> tags)
+3. Paste and save
+
+Part B - HTML & JavaScript:
+1. Go to: Appearance > Widgets
+2. Add "Custom HTML" widget to footer
+3. Paste the HTML and JavaScript sections
+4. Save
+
+METHOD 4: Plugin (Most Flexible)
+---------------------------------
+1. Install plugin: "Insert Headers and Footers"
+2. Go to: Settings > Insert Headers and Footers
+3. Paste ALL code in "Scripts in Footer" section
+4. Save
+
+===========================================
+TESTING
+===========================================
+
+After installation:
+1. Visit your site: healthyeatingguru.com
+2. You should see green/orange button (🥗) in bottom right
+3. Click it - chat widget should open
+4. Test: "Give me a recipe"
+5. Verify PDF downloads work
+
+===========================================
+CUSTOMIZATION OPTIONS
+===========================================
+
+Change Colors:
+- Green: #27a130
+- Orange: #fe980a
+- Edit these in the gradient lines
+
+Change Position:
+- Modify bottom: 20px; and right: 20px;
+- Options: top-left, top-right, bottom-left, bottom-right
+
+Change Size:
+- Modify width: 60px; height: 60px; in #mealBotButton
+- Modify width: 380px; height: 600px; in #mealChatWidget
+
+Change Icon:
+- Replace 🥗 with: 🍽️ 🥘 🍳 👨‍🍳 or any emoji
+
+===========================================
+TROUBLESHOOTING
+===========================================
+
+Widget not showing:
+- Check browser console for errors (F12)
+- Verify code pasted completely
+- Clear WordPress cache
+- Clear browser cache
+
+Widget shows but chat doesn't load:
+- Verify Railway URL is correct
+- Check Railway app is running
+- Test Railway URL directly in browser
+
+Button appears twice:
+- You pasted code in multiple places
+- Remove duplicate
+
+===========================================
+-->

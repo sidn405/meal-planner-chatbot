@@ -1,0 +1,9 @@
+{
+  "name": "healthy-eating-guru-alexa",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "ask-sdk-core": "^2.14.0",
+    "axios": "^1.6.0"
+  }
+}

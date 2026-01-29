@@ -41,7 +41,7 @@ Compress(app)
 CORS(app)
 
 # Brand colors (Green/Fresh theme)
-BRAND_COLOR = colors.HexColor('#fe980a')  # Deep green
+BRAND_COLOR = colors.HexColor('#fe980a')  # Main
 ACCENT_COLOR = colors.HexColor('#27a130')  # Light green
 SECONDARY_COLOR = colors.HexColor('#ff6f00')  # Orange
 
@@ -160,35 +160,17 @@ def extract_parameters(message):
         'days': None,
         'cuisine': None,
         'dietary': None,
-        'ingredients': [],
-        'allergies': [],
         'servings': 4,
         'budget': 'moderate'
     }
     
     # Detect intent
-    if any(word in message_lower for word in ['recipe', 'cook', 'make', 'prepare', 'how to make']):
+    if any(word in message_lower for word in ['recipe', 'cook', 'make', 'prepare', 'how to make', 'how do i make']):
         params['type'] = 'recipe'
     elif any(word in message_lower for word in ['meal plan', 'weekly plan', 'day plan', 'meal schedule']):
         params['type'] = 'meal_plan'
     elif any(word in message_lower for word in ['grocery', 'shopping', 'shopping list', 'ingredients list']):
         params['type'] = 'grocery_list'
-    
-    # Extract ingredients (proteins, vegetables, etc.)
-    ingredients_keywords = {
-        'proteins': ['chicken', 'beef', 'pork', 'lamb', 'turkey', 'duck', 'fish', 'salmon', 
-                    'tuna', 'shrimp', 'prawns', 'lobster', 'crab', 'tofu', 'tempeh', 'eggs'],
-        'vegetables': ['broccoli', 'spinach', 'kale', 'carrots', 'tomatoes', 'peppers', 
-                      'bell pepper', 'onions', 'garlic', 'mushrooms', 'zucchini', 'eggplant'],
-        'grains': ['rice', 'quinoa', 'pasta', 'noodles', 'bread', 'couscous', 'barley'],
-        'dairy': ['cheese', 'milk', 'cream', 'yogurt', 'butter'],
-        'other': ['avocado', 'beans', 'lentils', 'chickpeas', 'potatoes', 'sweet potato']
-    }
-    
-    for category, ingredients in ingredients_keywords.items():
-        for ingredient in ingredients:
-            if ingredient in message_lower:
-                params['ingredients'].append(ingredient)
     
     # Extract number of days
     import re
@@ -237,7 +219,7 @@ def create_branded_pdf(content, filename, doc_type="recipe"):
             fontSize=24,
             textColor=BRAND_COLOR,
             alignment=TA_CENTER,
-            spaceAfter=20,
+            spaceAfter=20,  # Increased from 10 for more space
         )
         
         subtitle_style = ParagraphStyle(
@@ -246,7 +228,7 @@ def create_branded_pdf(content, filename, doc_type="recipe"):
             fontSize=14,
             textColor=ACCENT_COLOR,
             alignment=TA_CENTER,
-            spaceAfter=30,
+            spaceAfter=30,  # Increased from 20 for more space
         )
         
         section_title_style = ParagraphStyle(
@@ -285,7 +267,7 @@ def create_branded_pdf(content, filename, doc_type="recipe"):
             "grocery_list": "Smart Shopping List"
         }
         story.append(Paragraph(doc_titles.get(doc_type, "Healthy Recipe"), subtitle_style))
-        story.append(Spacer(1, 0.3 * inch))
+        story.append(Spacer(1, 0.3 * inch))  # Increased from 0.3 inch for better spacing
         
         # First banner
         banner = BANNER_ADS[0]
@@ -387,16 +369,11 @@ def chat():
         
         # Determine what to generate
         if params['type'] == 'recipe':
-            # Generate recipe
-            prompt = f"Create a detailed, professional recipe.\n\n"
-            
-            # CRITICAL: Specify required ingredients
-            if params['ingredients']:
-                prompt += f"IMPORTANT: This recipe MUST include and feature these ingredients: {', '.join(params['ingredients'])}\n"
-                prompt += f"The recipe should be centered around these main ingredients.\n\n"
+            # Generate recipe - just use the user's original message
+            prompt = f"Create a detailed, professional recipe based on this request: '{message}'\n\n"
             
             if params['cuisine']:
-                prompt += f"Cuisine: {params['cuisine']}\n"
+                prompt += f"Cuisine style: {params['cuisine']}\n"
             if params['dietary']:
                 prompt += f"Dietary requirement: {params['dietary']} (follow all {params['dietary']} rules strictly)\n"
             prompt += f"Servings: {params['servings']}\n\n"
@@ -437,8 +414,6 @@ def chat():
                 prompt += f"Cuisine preference: {params['cuisine']}\n"
             if params['dietary']:
                 prompt += f"Dietary preference: {params['dietary']}\n"
-            if params['allergies']:
-                prompt += f"Allergies: {', '.join(params['allergies'])}\n"
             prompt += f"Budget: {params['budget']}\n\n"
             prompt += f"""Format each day clearly:
 
