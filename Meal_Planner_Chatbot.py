@@ -491,9 +491,8 @@ from flask import request, jsonify
 import time
 
 def call_openai_alexa(prompt: str) -> str:
-    # IMPORTANT: low max_tokens + concise instruction
-    # Implement using your existing OpenAI client
-    return call_openai(prompt, max_tokens=300, temperature=0.7)
+    # Keep this simple: match your existing signature
+    return call_openai(prompt)
 
 @app.route('/alexa', methods=['POST'])
 def alexa():
